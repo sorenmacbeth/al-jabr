@@ -1,4 +1,4 @@
 aljebra
 =======
 
-A Clojure port of twitter/algebird
+A Clojure wrapper of twitter/algebird
