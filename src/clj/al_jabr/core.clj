@@ -1,4 +1,4 @@
-(ns al-jebr.core)
+(ns al-jabr.core)
 
 (defn foo
   "I don't do a whole lot."

@@ -1,6 +1,6 @@
-(ns al-jebr.core-test
+(ns al-jabr.core-test
   (:use clojure.test
-        al-jebr.core))
+        al-jabr.core))
 
 (deftest a-test
   (testing "FIXME, I fail."

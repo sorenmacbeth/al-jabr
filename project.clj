@@ -1,6 +1,6 @@
-(defproject al-jebr "0.1.0-SNAPSHOT"
+(defproject al-jabr "0.1.0-SNAPSHOT"
   :description "A Clojure wrapper of twitter/algebird"
-  :url "https://github.com/sorenmacbeth/al-jebr"
+  :url "https://github.com/sorenmacbeth/al-jabr"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :min-lein-version "2.0.0"
