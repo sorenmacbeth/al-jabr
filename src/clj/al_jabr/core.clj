@@ -45,6 +45,11 @@
     ([l r] (plus l r))))
 
 (def int-monoid (monoid (constantly 0)))
+(def long-monoid (monoid (constantly 0)))
+(def string-monoid (monoid str))
+(def map-monoid (monoid hash-map))
+(def vector-monoid (monoid vector))
+(def set-monoid (monoid hash-set))
 
 (comment
   (int-monoid) ;;=> 0
