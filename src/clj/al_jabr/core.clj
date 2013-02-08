@@ -29,6 +29,16 @@
    Double JDoubleField
    String StringMonoid})
 
+(extend-protocol Semigroup
+  clojure.lang.IPersistentMap
+  (plus [l r] (merge-with plus l r))
+
+  clojure.lang.IPersistentVector
+  (plus [l r] (into [] (concat l r)))
+
+  clojure.lang.IPersistentSet
+  (plus [l r] (into l r)))
+
 (defn monoid [zero-fn]
   (fn
     ([] (zero-fn))
