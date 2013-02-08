@@ -28,3 +28,15 @@
    Float JFloatField
    Double JDoubleField
    String StringMonoid})
+
+(defn monoid [zero-fn]
+  (fn
+    ([] (zero-fn))
+    ([l r] (plus l r))))
+
+(def int-monoid (monoid (constantly 0)))
+
+(comment
+  (int-monoid) ;;=> 0
+  (int-monoid 10 11) ;; => 21
+  )
