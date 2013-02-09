@@ -44,14 +44,13 @@
     ([] (zero-fn))
     ([l r] (plus l r))))
 
-(def int-monoid (monoid (constantly 0)))
-(def long-monoid (monoid (constantly 0)))
+(def num-monoid (monoid (constantly 0)))
 (def string-monoid (monoid str))
 (def map-monoid (monoid hash-map))
 (def vector-monoid (monoid vector))
 (def set-monoid (monoid hash-set))
 
 (comment
-  (int-monoid) ;;=> 0
-  (int-monoid 10 11) ;; => 21
+  (num-monoid) ;;=> 0
+  (num-monoid 10 11) ;; => 21
   )
