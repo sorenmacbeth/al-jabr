@@ -37,7 +37,10 @@
   (plus [l r] (into [] (concat l r)))
 
   clojure.lang.IPersistentSet
-  (plus [l r] (into l r)))
+  (plus [l r] (into l r))
+
+  clojure.lang.IFn
+  (plus [l r] (comp r l)))
 
 (defn monoid [zero-fn]
   (fn
@@ -49,6 +52,7 @@
 (def map-monoid (monoid hash-map))
 (def vector-monoid (monoid vector))
 (def set-monoid (monoid hash-set))
+(def fn-monoid (monoid (constantly nil))) ;; not sure about the zero-fn
 
 (comment
   (num-monoid) ;;=> 0
