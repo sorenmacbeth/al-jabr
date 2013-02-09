@@ -40,7 +40,10 @@
   (plus [l r] (into l r))
 
   clojure.lang.IFn
-  (plus [l r] (comp r l)))
+  (plus [l r] (comp r l))
+
+  clojure.lang.Ratio
+  (plus [l r] (+ l r)))
 
 (defn monoid [zero-fn]
   (fn
@@ -53,6 +56,7 @@
 (def vector-monoid (monoid vector))
 (def set-monoid (monoid hash-set))
 (def fn-monoid (monoid (constantly nil))) ;; not sure about the zero-fn
+(def ratio-monoid (monoid (constantly 0)))
 
 (comment
   (num-monoid) ;;=> 0
