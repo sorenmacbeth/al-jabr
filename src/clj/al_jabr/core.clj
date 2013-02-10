@@ -55,7 +55,7 @@
 (def map-monoid (monoid hash-map))
 (def vector-monoid (monoid vector))
 (def set-monoid (monoid hash-set))
-(def fn-monoid (monoid (constantly nil))) ;; not sure about the zero-fn
+(def fn-monoid (monoid (fn [] identity)))
 (def ratio-monoid (monoid (constantly 0)))
 
 (comment
