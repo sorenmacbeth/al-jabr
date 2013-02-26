@@ -1,4 +1,5 @@
-(ns al-jabr.core)
+(ns al-jabr.core
+  (:import [com.twitter.algebird DecayedValue$ AveragedGroup$]))
 
 (defn type-sym [algebird-type]
   (symbol (str algebird-type "$/MODULE$")))
@@ -52,7 +53,18 @@
 (defrecord DecayedValue [value scaled-time])
 (extend-protocol Semigroup
   DecayedValue
-  (plus [l r] (.plus DERPDERP)))
+  (plus [l r] (.plus ;; DERP?
+               (.apply DecayedValue$/MODULE$ (:value l) (:scaled-time l))
+               (.apply DecayedValue$/MODULE$ (:value r) (:scaled-time r)))))
+
+(defrecord AveragedValue [count value])
+(extend-protocol Semigroup
+  AveragedValue
+  (plus [l r]
+    (let [v (.plus AveragedGroup$/MODULE$
+                   (com.twitter.algebird.AveragedValue. (:count l) (:value l))
+                   (com.twitter.algebird.AveragedValue. (:count r) (:value r)))]
+      (AveragedValue. (.count v) (.value v)))))
 
 (defn monoid [zero-fn]
   (fn
@@ -67,7 +79,9 @@
 (def fn-monoid (monoid (fn [] identity)))
 (def ratio-monoid (monoid (constantly 0)))
 
-(defn decayed-value-monoid [epsilon]
-  (monoid (fn []
-            (let [m (.zero (.monoidWithEpsilon com.twitter.algebird.DecayedValue$/MODULE$ epsilon))]
-              (DecayedValue. (.value m) (.scaledTime m))))))
+(defn decayed-monoid [epsilon]
+  (monoid #(let [m (.zero (.monoidWithEpsilon DecayedValue$/MODULE$ epsilon))]
+             (DecayedValue. (.value m) (.scaledTime m)))))
+
+(def averaged-monoid (monoid #(let [m (.zero AveragedGroup$/MODULE$)]
+                                (AveragedValue. (.count m) (.value m)))))
