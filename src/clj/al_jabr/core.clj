@@ -50,24 +50,6 @@
   clojure.lang.Ratio
   (plus [l r] (+ l r)))
 
-(defrecord DecayedValue [value scaled-time])
-(extend-protocol Semigroup
-  DecayedValue
-  (plus [l r]
-    (let [v (.plus ;; DERP?
-             (.apply DecayedValue$/MODULE$ (:value l) (:scaled-time l))
-             (.apply DecayedValue$/MODULE$ (:value r) (:scaled-time r)))]
-      (DecayedValue. (.value v) (.scaledTime v)))))
-
-(defrecord AveragedValue [count value])
-(extend-protocol Semigroup
-  AveragedValue
-  (plus [l r]
-    (let [v (.plus AveragedGroup$/MODULE$
-                   (com.twitter.algebird.AveragedValue. (:count l) (:value l))
-                   (com.twitter.algebird.AveragedValue. (:count r) (:value r)))]
-      (AveragedValue. (.count v) (.value v)))))
-
 (defn monoid [zero-fn]
   (fn
     ([] (zero-fn))
@@ -81,9 +63,29 @@
 (def fn-monoid (monoid (fn [] identity)))
 (def ratio-monoid (monoid (constantly 0)))
 
-(defn decayed-monoid [epsilon]
-  (monoid #(let [m (.zero (.monoidWithEpsilon DecayedValue$/MODULE$ epsilon))]
-             (DecayedValue. (.value m) (.scaledTime m)))))
+(defrecord DecayedValue [^double value ^double scaled-time])
+
+;; stateful monoid must be done outside of the `Semigroup` protocol
+(defn decayed-monoid [^double epsilon]
+  (let [monoid (.monoidWithEpsilon DecayedValue$/MODULE$ epsilon)]
+    (fn
+      ([]
+         (let [v (.zero monoid)]
+           (DecayedValue. (.value v) (.scaledTime v))))
+      ([l r]
+         (let [v (.plus monoid
+                        (.apply DecayedValue$/MODULE$ (:value l) (:scaled-time l))
+                        (.apply DecayedValue$/MODULE$ (:value r) (:scaled-time r)))]
+           (DecayedValue. (.value v) (.scaledTime v)))))))
+
+(defrecord AveragedValue [^long count ^double value])
+(extend-protocol Semigroup
+  AveragedValue
+  (plus [l r]
+    (let [v (.plus AveragedGroup$/MODULE$
+                   (com.twitter.algebird.AveragedValue. (:count l) (:value l))
+                   (com.twitter.algebird.AveragedValue. (:count r) (:value r)))]
+      (AveragedValue. (.count v) (.value v)))))
 
 (def averaged-monoid (monoid #(let [m (.zero AveragedGroup$/MODULE$)]
                                 (AveragedValue. (.count m) (.value m)))))
