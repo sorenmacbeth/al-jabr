@@ -53,9 +53,11 @@
 (defrecord DecayedValue [value scaled-time])
 (extend-protocol Semigroup
   DecayedValue
-  (plus [l r] (.plus ;; DERP?
-               (.apply DecayedValue$/MODULE$ (:value l) (:scaled-time l))
-               (.apply DecayedValue$/MODULE$ (:value r) (:scaled-time r)))))
+  (plus [l r]
+    (let [v (.plus ;; DERP?
+             (.apply DecayedValue$/MODULE$ (:value l) (:scaled-time l))
+             (.apply DecayedValue$/MODULE$ (:value r) (:scaled-time r)))]
+      (DecayedValue. (.value v) (.scaledTime v)))))
 
 (defrecord AveragedValue [count value])
 (extend-protocol Semigroup
