@@ -19,6 +19,8 @@
                        (~'plus [l# r#] (.plus ~(type-sym algebird-type) l# r#))])
              m))))
 
+;; ## Clojure Primitives
+
 (defsemigroups
   {nil NullGroup
    Boolean JBoolField
@@ -28,6 +30,8 @@
    Float JFloatField
    Double JDoubleField
    String StringMonoid})
+
+;; ## Clojure Types
 
 (extend-protocol Semigroup
   clojure.lang.IPersistentMap
@@ -45,6 +49,11 @@
   clojure.lang.Ratio
   (plus [l r] (+ l r)))
 
+(defrecord DecayedValue [value scaled-time])
+(extend-protocol Semigroup
+  DecayedValue
+  (plus [l r] (.plus DERPDERP)))
+
 (defn monoid [zero-fn]
   (fn
     ([] (zero-fn))
@@ -58,7 +67,7 @@
 (def fn-monoid (monoid (fn [] identity)))
 (def ratio-monoid (monoid (constantly 0)))
 
-(comment
-  (num-monoid) ;;=> 0
-  (num-monoid 10 11) ;; => 21
-  )
+(defn decayed-value-monoid [epsilon]
+  (monoid (fn []
+            (let [m (.zero (.monoidWithEpsilon com.twitter.algebird.DecayedValue$/MODULE$ epsilon))]
+              (DecayedValue. (.value m) (.scaledTime m))))))
