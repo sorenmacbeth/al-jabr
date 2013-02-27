@@ -20,7 +20,7 @@
                        (~'plus [l# r#] (.plus ~(type-sym algebird-type) l# r#))])
              m))))
 
-;; ## Clojure Primitives
+;; ## Java Primitives
 
 (defsemigroups
   {nil NullGroup
@@ -63,6 +63,8 @@
 (def fn-monoid (monoid (fn [] identity)))
 (def ratio-monoid (monoid (constantly 0)))
 
+;; ## AveragedValue
+
 (defrecord AveragedValue [^long count ^double value])
 
 (extend-protocol Semigroup
@@ -75,6 +77,8 @@
 
 (def averaged-monoid (monoid #(let [m (.zero AveragedGroup$/MODULE$)]
                                 (AveragedValue. (.count m) (.value m)))))
+
+;; ## DecayedValue
 
 ;; stateful monoid must be done outside of the `Semigroup` protocol
 (defrecord DecayedValue [^double value ^double scaled-time])
@@ -91,7 +95,10 @@
                         (.apply DecayedValue$/MODULE$ (:value r) (:scaled-time r)))]
            (DecayedValue. (.value v) (.scaledTime v)))))))
 
+;; ## HyperLogLog
+
 ;; TODO: bijection between scala and clojure collections maybe?
+
 (defrecord SparseHLL [bits maxrhow])
 (defrecord DenseHLL [bits v])
 
