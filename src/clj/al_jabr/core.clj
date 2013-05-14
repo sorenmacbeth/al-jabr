@@ -1,5 +1,6 @@
 (ns al-jabr.core
-  (:import [com.twitter.algebird DecayedValue$ AveragedGroup$ HyperLogLogMonoid]))
+  (:import [com.twitter.algebird AveragedValue DecayedValue
+            DecayedValue$ AveragedGroup$ HyperLogLogMonoid HLL]))
 
 (defn type-sym [algebird-type]
   (symbol (str algebird-type "$/MODULE$")))
@@ -65,58 +66,28 @@
 
 ;; ## AveragedValue
 
-(defrecord AveragedValue [^long count ^double value])
-
 (extend-protocol Semigroup
   AveragedValue
   (plus [l r]
-    (let [v (.plus AveragedGroup$/MODULE$
-                   (com.twitter.algebird.AveragedValue. (:count l) (:value l))
-                   (com.twitter.algebird.AveragedValue. (:count r) (:value r)))]
-      (AveragedValue. (.count v) (.value v)))))
+    (.plus AveragedGroup$/MODULE$ l r)))
 
-(def averaged-monoid (monoid #(let [m (.zero AveragedGroup$/MODULE$)]
-                                (AveragedValue. (.count m) (.value m)))))
+(def averaged-monoid (monoid (fn [] #(.zero AveragedGroup$/MODULE$))))
 
 ;; ## DecayedValue
-
-;; stateful monoid must be done outside of the `Semigroup` protocol
-(defrecord DecayedValue [^double value ^double scaled-time])
 
 (defn decayed-monoid [^double epsilon]
   (let [monoid (.monoidWithEpsilon DecayedValue$/MODULE$ epsilon)]
     (fn
       ([]
-         (let [v (.zero monoid)]
-           (DecayedValue. (.value v) (.scaledTime v))))
-      ([l r]
-         (let [v (.plus monoid
-                        (.apply DecayedValue$/MODULE$ (:value l) (:scaled-time l))
-                        (.apply DecayedValue$/MODULE$ (:value r) (:scaled-time r)))]
-           (DecayedValue. (.value v) (.scaledTime v)))))))
+         (.zero monoid))
+      ([^DecayedValue l ^DecayedValue r]
+         (.plus monoid l r)))))
 
 ;; ## HyperLogLog
 
-;; TODO: bijection between scala and clojure collections maybe?
-
-(defrecord SparseHLL [bits maxrhow])
-(defrecord DenseHLL [bits v])
-
-(defn hll-bijection [v]
-  (cond
-   (instance? com.twitter.algebird.DenseHLL v) (DenseHLL. (.bits v) (.v v))
-   (instance? com.twitter.algebird.SparseHLL v) (SparseHLL. (.bits v) (.maxRhow v))
-   (instance? SparseHLL v) (com.twitter.algebird.SparseHLL. (:bits v) (:maxrhow v))
-   (instance? DenseHLL v) (com.twitter.algebird.DenseHLL. (:bits v) (:v v))))
-
-(defn hll-monoid [bits]
-  (let [monoid (HyperLogLogMonoid. bits)]
-    (fn
-      ([]
-         (let [v (.zero monoid)]
-           (hll-bijection v)))
-      ([l r]
-         (let [v (.plus monoid
-                        (hll-bijection l)
-                        (hll-bijection r))]
-           (hll-bijection v))))))
+(defn hll-monoid [monoid bits]
+  (fn
+    ([]
+       (.zero monoid))
+    ([^HLL l ^HLL r]
+       (.plus monoid l r))))

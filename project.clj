@@ -5,5 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :min-lein-version "2.0.0"
   :source-paths ["src/clj"]
-  :dependencies [[org.clojure/clojure "1.4.0"]
-                 [com.twitter/algebird-core_2.9.2 "0.1.8"]])
+  :dependencies [[org.clojure/clojure "1.5.1"]
+                 [com.twitter/algebird-core_2.9.2 "0.1.12"]]
+  :profiles {:dev {:dependencies [[midje "1.5.1"]]
+                   :plugins [[lein-midje "3.0.1"]]}})
