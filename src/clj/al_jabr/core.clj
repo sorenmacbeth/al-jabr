@@ -1,6 +1,7 @@
 (ns al-jabr.core
-  (:import [com.twitter.algebird AveragedValue DecayedValue
-            DecayedValue$ AveragedGroup$ HyperLogLogMonoid HLL]))
+  (:import [com.twitter.algebird
+            AveragedValue DecayedValue HyperLogLogMonoid HLL
+            MinHasher32 DecayedValue$ AveragedGroup$]))
 
 (defn type-sym [algebird-type]
   (symbol (str algebird-type "$/MODULE$")))
@@ -36,22 +37,28 @@
 ;; ## Clojure Types
 
 (extend-protocol Semigroup
+  nil
+  (plus [l r] r)
+  
   clojure.lang.IPersistentMap
   (plus [l r] (merge-with plus l r))
 
+  clojure.lang.IPersistentList
+  (plus [l r] (concat l r))
+  
   clojure.lang.IPersistentVector
   (plus [l r] (into [] (concat l r)))
 
   clojure.lang.IPersistentSet
   (plus [l r] (into l r))
 
-  clojure.lang.IFn
-  (plus [l r] (comp r l))
-
   clojure.lang.Ratio
   (plus [l r] (+ l r)))
 
-(defn monoid [zero-fn]
+(defn monoid
+  "Returns a monoid function for types implementing
+   the `Semigroup` protocol with the supplied `zero-fn`"
+  [zero-fn]
   (fn
     ([] (zero-fn))
     ([l r] (plus l r))))
@@ -85,9 +92,39 @@
 
 ;; ## HyperLogLog
 
-(defn hll-monoid [monoid bits]
+(defn mk-hyper-log-log
+  "Make a `HyperLogLogMonoid` instance with the supplied
+   error percent `err-percent`."
+  [err-percent]
+  (let [log2 (fn [x] (/ (Math/log x) (Math/log 2.0)))
+        bits (->> (- (log2 104) (log2 err-percent)) Math/ceil (* 2))]
+    (HyperLogLogMonoid. bits)))
+
+(defn ->hll
+  "Apply function `f` to `x`, which should return a byte array.
+   The resulting byte array is passed into `monoid` which creates
+   a `SparseHLL` instance."
+  [^HyperLogLogMonoid monoid f x]
+  (.create monoid (f x)))
+
+(defn hll-monoid
+  "Create a hyper log log monoid function from the supplied
+   HyperLogLogMonoid instance `monoid`."
+  [^HyperLogLogMonoid monoid]
   (fn
     ([]
        (.zero monoid))
     ([^HLL l ^HLL r]
        (.plus monoid l r))))
+
+;; ## MinHasher
+
+(defn mk-minhasher [t n]
+  (MinHasher32. t n))
+
+(defn mh-monoid [^MinHasher32 monoid]
+  (fn
+   ([]
+      (.zero monoid))
+   ([^bytes l ^bytes r]
+      (.plus monoid l r))))
